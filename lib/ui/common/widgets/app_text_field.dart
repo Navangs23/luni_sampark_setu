@@ -8,7 +8,7 @@ class AppTextField extends StatelessWidget {
   final int? maxLength;
   final FocusNode? focusNode;
   final bool readOnly;
-  final Widget? suffix;
+  final Widget? suffixIcon;
   final Color? textColor;
 
   const AppTextField({
@@ -20,8 +20,8 @@ class AppTextField extends StatelessWidget {
     this.maxLength,
     this.focusNode,
     this.readOnly = false,
-    this.suffix,
-    this.textColor =Colors.black,
+    this.suffixIcon,
+    this.textColor = Colors.black,
   });
 
   @override
@@ -37,13 +37,13 @@ class AppTextField extends StatelessWidget {
       cursorColor: theme.colorScheme.secondary,
       onChanged: onChanged,
       focusNode: focusNode,
-      style:  TextStyle(color: textColor),
+      style: TextStyle(color: textColor),
       decoration: InputDecoration(
         labelText: label,
         floatingLabelBehavior: FloatingLabelBehavior.auto,
         filled: false,
         counterText: "",
-        suffix: suffix,
+        suffixIcon: suffixIcon,
 
         labelStyle: TextStyle(color: theme.colorScheme.secondary),
 

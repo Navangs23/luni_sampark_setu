@@ -43,7 +43,6 @@ class _AppColorCyclingLoaderState extends State<AppColorCyclingLoader>
       builder: (_, __) {
         final index =
             (_controller.value * _colors.length).floor() % _colors.length;
-        debugPrint('index: $index');
         return SizedBox(
           width: widget.size,
           height: widget.size,

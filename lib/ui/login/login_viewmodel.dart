@@ -8,86 +8,35 @@ import '../home/shell/home_shell_view.dart';
 
 class LoginViewModel extends ChangeNotifier {
   String _mobile = '';
-  String _otp = '';
+  String _password = '';
 
-  bool _showOtpField = false;
   bool _isLoading = false;
 
-  bool get showOtpField => _showOtpField;
   bool get isLoading => _isLoading;
 
   void setMobile(String value) {
     _mobile = value.trim();
   }
 
-  void setOtp(String value) {
-    _otp = value.trim();
+  void setPassword(String value) {
+    _password = value.trim();
   }
 
   void reset() {
     _mobile = '';
-    _otp = '';
-    _showOtpField = false;
+    _password = '';
     _isLoading = false;
     notifyListeners();
   }
 
-  void changeMobile() {
-    _showOtpField = false;
-    _otp = '';
-    notifyListeners();
-  }
-
-  Future<void> sendOtp() async {
-    if (_mobile.length < 10) {
-      SnackbarService.show(
-        'Please enter a valid mobile number',
-        type: SnackbarType.error,
-      );
-      return;
-    }
-
-    _isLoading = true;
-    notifyListeners();
-
-    try {
-      final response = await ApiService.post(
-        endpoint: "sendOTPToUser.php",
-        body: {
-          "username": _mobile,
-        },
-      );
-
-      if (response["success"] == 1) {
-        _showOtpField = true;
-        SnackbarService.show(
-          response["message"],
-          type: SnackbarType.success,
-        );
-      } else {
-        SnackbarService.show(
-          response["message"] ?? "Something went wrong",
-          type: SnackbarType.error,
-        );
-      }
-    } catch (e) {
-      SnackbarService.show(
-        "Network error. Please try again.",
-        type: SnackbarType.error,
-      );
-    } finally {
-      _isLoading = false;
-      notifyListeners();
-    }
-  }
-
-
   Future<void> login() async {
-    if (_otp.length < 6) {
-      SnackbarService.show(
-        'Please enter valid OTP',
-        type: SnackbarType.error,
-      );
+    if (_mobile.isEmpty || _mobile.length < 10) {
+      SnackbarService.show("Enter valid mobile number");
+      return;
+    }
+
+    if (_password.isEmpty) {
+      SnackbarService.show("Enter password");
       return;
     }
 
@@ -96,45 +45,28 @@ class LoginViewModel extends ChangeNotifier {
 
     try {
       final response = await ApiService.post(
-        endpoint: "checkLogin.php",
-        body: {
-          "username": _mobile,
-          "password": _otp,
-        },
+        endpoint: "apiCheckLogin.php",
+        body: {"username": _mobile, "password": _password},
       );
 
       if (response["success"] == 1) {
-        // 🔥 Save session locally
-         SessionService.saveUser(
+        SessionService.saveUser(
           userId: response["user_id"],
           familyId: response["family_id"],
           name: response["name"],
-           mobile: _mobile,
+          mobile: _mobile,
         );
 
-        SnackbarService.show(
-          response["message"],
-          type: SnackbarType.success,
-        );
-
-        reset();
-
-        NavigationService.pushReplacement(HomeShellView());
+        NavigationService.pushReplacement(const HomeShellView());
       } else {
-        SnackbarService.show(
-          response["message"] ?? "Invalid OTP",
-          type: SnackbarType.error,
-        );
+        SnackbarService.show(response["message"] ?? "Login failed");
       }
     } catch (e) {
-      SnackbarService.show(
-        "Network error. Please try again.",
-        type: SnackbarType.error,
-      );
-    } finally {
-      _isLoading = false;
-      notifyListeners();
+      print(e);
+      SnackbarService.show("Something went wrong");
     }
-  }
 
+    _isLoading = false;
+    notifyListeners();
+  }
 }

@@ -1,38 +1,60 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 
-class CommunitySample extends StatelessWidget {
+class CommunitySample extends StatefulWidget {
   final String pageTitle;
-  const CommunitySample({super.key,required this.pageTitle});
+  final String url;
+
+  const CommunitySample({
+    super.key,
+    required this.pageTitle,
+    required this.url,
+  });
+
+  @override
+  State<CommunitySample> createState() => _CommunitySampleState();
+}
+
+class _CommunitySampleState extends State<CommunitySample> {
+  InAppWebViewController? webViewController;
+  bool _isLoading = true;
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(create: (_){},
-    child: Scaffold(
-      appBar: AppBar(
-        title: Text(pageTitle),
-      ),
-      body: Center(
-        child: Text.rich(
-          TextSpan(
-            children: [
-              TextSpan(
-                text: pageTitle,
-                style: const TextStyle(
-                  color: Colors.black,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const TextSpan(
-                text: " is Coming Soon...\nStay Tuned !!! 😀☺️",
-              ),
-            ],
+    return Scaffold(
+      appBar: AppBar(title: Text(widget.pageTitle)),
+      body: Stack(
+        children: [
+          InAppWebView(
+            initialUrlRequest: URLRequest(url: WebUri(widget.url)),
+            onWebViewCreated: (controller) {
+              webViewController = controller;
+            },
+            onLoadStart: (controller, url) {
+              setState(() {
+                _isLoading = true;
+              });
+            },
+            onLoadStop: (controller, url) {
+              setState(() {
+                _isLoading = false;
+              });
+            },
+            onReceivedError: (controller, request, error) {
+              setState(() {
+                _isLoading = false;
+              });
+            },
           ),
-          textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 16),
-        ),
-
+          if (_isLoading)
+            const Positioned.fill(
+              child: ColoredBox(
+                color: Colors.white,
+                child: Center(child: CircularProgressIndicator()),
+              ),
+            ),
+        ],
       ),
-    ),);
+    );
   }
 }

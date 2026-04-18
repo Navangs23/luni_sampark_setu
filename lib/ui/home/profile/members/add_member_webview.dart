@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class AddMemberWebView extends StatefulWidget {
@@ -21,11 +22,10 @@ class _AddMemberWebViewState extends State<AddMemberWebView> {
   bool _isLoading = true;
 
   /// 🔥 Change this to your main domain
-  final String allowedDomain = "fairlorry.com";
+  final String allowedDomain = "panjoluni.com";
 
   Future<void> _handleBack() async {
-    if (_webViewController != null &&
-        await _webViewController!.canGoBack()) {
+    if (_webViewController != null && await _webViewController!.canGoBack()) {
       _webViewController!.goBack();
     } else {
       if (mounted) {
@@ -42,15 +42,11 @@ class _AddMemberWebViewState extends State<AddMemberWebView> {
   /// ✅ Launch externally (Chrome / Apps)
   Future<void> _launchExternal(Uri uri) async {
     if (await canLaunchUrl(uri)) {
-      await launchUrl(
-        uri,
-        mode: LaunchMode.externalApplication,
-      );
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
     } else {
       debugPrint("Could not launch $uri");
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -72,9 +68,7 @@ class _AddMemberWebViewState extends State<AddMemberWebView> {
         body: Stack(
           children: [
             InAppWebView(
-              initialUrlRequest: URLRequest(
-                url: WebUri(widget.url),
-              ),
+              initialUrlRequest: URLRequest(url: WebUri(widget.url)),
 
               initialSettings: InAppWebViewSettings(
                 javaScriptEnabled: true,
@@ -86,8 +80,7 @@ class _AddMemberWebViewState extends State<AddMemberWebView> {
               ),
 
               /// 🔥 MAIN URL INTERCEPTION LOGIC
-              shouldOverrideUrlLoading:
-                  (controller, navigationAction) async {
+              shouldOverrideUrlLoading: (controller, navigationAction) async {
                 final uri = navigationAction.request.url;
 
                 if (uri == null) {
@@ -130,6 +123,20 @@ class _AddMemberWebViewState extends State<AddMemberWebView> {
 
               onWebViewCreated: (controller) {
                 _webViewController = controller;
+                // ✅ Add this handler to receive sharing requests from the web page
+                controller.addJavaScriptHandler(
+                  handlerName: 'shareProfile',
+                  callback: (args) {
+                    if (args.isNotEmpty) {
+                      final Map<String, dynamic> data = args[0];
+                      // Trigger the native share (requires share_plus package)
+                      Share.share(
+                        "${data['text']} ${data['url']}",
+                        subject: data['title'],
+                      );
+                    }
+                  },
+                );
               },
 
               onPermissionRequest: (controller, request) async {
@@ -145,9 +152,7 @@ class _AddMemberWebViewState extends State<AddMemberWebView> {
               const Positioned.fill(
                 child: ColoredBox(
                   color: Colors.white,
-                  child: Center(
-                    child: CircularProgressIndicator(),
-                  ),
+                  child: Center(child: CircularProgressIndicator()),
                 ),
               ),
           ],

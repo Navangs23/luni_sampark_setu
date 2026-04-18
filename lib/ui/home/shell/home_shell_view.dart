@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:luni_sampark_setu/core/services/session_service.dart';
-import 'package:luni_sampark_setu/core/services/snackbar_service.dart';
+import 'package:luni_sampark_setu/core/services/notification_service.dart';
+import 'package:luni_sampark_setu/core/services/navigation_service.dart';
 import 'package:luni_sampark_setu/core/theme/app_colors.dart';
 import 'package:provider/provider.dart';
 
 import '../dashboard/home_view.dart';
 import '../dashboard/home_viewmodel.dart';
 import '../news/news_events_view.dart';
+import '../notifications/notifications_view.dart';
 import '../profile/profile_view.dart';
 import 'home_shell_viewmodel.dart';
 
@@ -15,20 +16,15 @@ class HomeShellView extends StatefulWidget {
 
   @override
   State<HomeShellView> createState() => _HomeShellViewState();
-
-
 }
 
-
 class _HomeShellViewState extends State<HomeShellView> {
-
-
-
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<HomeShellViewModel>().loadUser();
+      NotificationService.setAppReady();
     });
   }
 
@@ -48,14 +44,42 @@ class _HomeShellViewState extends State<HomeShellView> {
         centerTitle: false,
         backgroundColor: theme.colorScheme.primary,
         actions: [
-          IconButton(
-            style: ButtonStyle(
-              overlayColor: MaterialStateProperty.all(Colors.white24),
+          Padding(
+            padding: const EdgeInsets.only(right: 8.0),
+            child: Badge(
+              label: Text(
+                vm.unreadCount > 99 ? '99+' : vm.unreadCount.toString(),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              alignment: Alignment.topRight,
+              isLabelVisible: vm.unreadCount > 0,
+              backgroundColor: AppColors.secondary,
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              largeSize: 20,
+              offset: const Offset(6, -2),
+              child: IconButton(
+                style: IconButton.styleFrom(
+                  backgroundColor: Colors.white.withOpacity(0.35),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                onPressed: () {
+                  NavigationService.push(const NotificationsView()).then((_) {
+                    vm.fetchUnreadCount();
+                  });
+                },
+                icon: const Icon(
+                  Icons.notifications_outlined,
+                  size: 26,
+                  color: Colors.white,
+                ),
+              ),
             ),
-            onPressed: () {
-              SnackbarService.show("Notification Will Be Showed here.",type: SnackbarType.info);
-            },
-            icon: Icon(Icons.notifications, size: 32, color: Colors.white),
           ),
         ],
         title: Column(
@@ -101,10 +125,12 @@ class _HomeShellViewState extends State<HomeShellView> {
             label: 'Community',
           ),
           NavigationDestination(
-            icon: CircleAvatar(
-              radius: 14,
-              backgroundImage: NetworkImage('https://picsum.photos/100/100'),
-            ),
+            icon: vm.profilePicUrl.isNotEmpty
+                ? CircleAvatar(
+                    radius: 14,
+                    backgroundImage: NetworkImage(vm.profilePicUrl),
+                  )
+                : const Icon(Icons.person, size: 28),
             label: 'Profile',
           ),
         ],

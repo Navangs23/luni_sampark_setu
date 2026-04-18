@@ -8,37 +8,16 @@ import 'login_viewmodel.dart';
 class LoginView extends StatefulWidget {
   LoginView({super.key});
 
-
-
   @override
   State<LoginView> createState() => _LoginViewState();
-
-
-
 }
 
 class _LoginViewState extends State<LoginView> {
-
-  final FocusNode _otpFocusNode = FocusNode();
-
-  @override
-  void dispose() {
-    _otpFocusNode.dispose();
-    super.dispose();
-  }
-
+  bool hidePassword = true;
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<LoginViewModel>();
     final theme = Theme.of(context);
-    if (vm.showOtpField) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!_otpFocusNode.hasFocus) {
-          _otpFocusNode.requestFocus();
-        }
-      });
-    }
-
 
     return Scaffold(
       body: Stack(
@@ -52,7 +31,6 @@ class _LoginViewState extends State<LoginView> {
                 colors: [
                   theme.colorScheme.primary,
                   theme.colorScheme.secondary,
-                  /*theme.colorScheme.tertiary.withOpacity(0.9),*/
                 ],
               ),
             ),
@@ -83,9 +61,6 @@ class _LoginViewState extends State<LoginView> {
               color: Colors.white.withOpacity(0.1),
             ),
           ),
-          // 🔹 Existing ones (keep as-is)
-
-          // 🔹 Additional subtle circles
           Positioned(
             top: 40,
             left: 60,
@@ -94,7 +69,6 @@ class _LoginViewState extends State<LoginView> {
               color: Colors.white.withOpacity(0.06),
             ),
           ),
-
           Positioned(
             top: 220,
             left: -40,
@@ -103,7 +77,6 @@ class _LoginViewState extends State<LoginView> {
               color: Colors.white.withOpacity(0.05),
             ),
           ),
-
           Positioned(
             bottom: 180,
             right: 40,
@@ -112,7 +85,6 @@ class _LoginViewState extends State<LoginView> {
               color: Colors.white.withOpacity(0.06),
             ),
           ),
-
           Positioned(
             bottom: 40,
             left: 80,
@@ -158,7 +130,7 @@ class _LoginViewState extends State<LoginView> {
 
                       // 🔹 Title
                       Text(
-                        'Login via OTP',
+                        'Login',
                         style: theme.textTheme.headlineSmall?.copyWith(
                           fontWeight: FontWeight.bold,
                           color: theme.colorScheme.secondary,
@@ -169,9 +141,7 @@ class _LoginViewState extends State<LoginView> {
 
                       // 🔹 Subtitle
                       Text(
-                        vm.showOtpField
-                            ? 'Enter the OTP sent to your mobile'
-                            : 'We will send an OTP to verify your number',
+                        'Enter your mobile number and password',
                         style: theme.textTheme.bodySmall,
                         textAlign: TextAlign.center,
                       ),
@@ -183,67 +153,45 @@ class _LoginViewState extends State<LoginView> {
                         label: 'Mobile Number',
                         keyboardType: TextInputType.number,
                         maxLength: 10,
-                        textColor: vm.showOtpField? Colors.grey:Colors.black ,
                         onChanged: vm.setMobile,
-                        readOnly: vm.showOtpField,   // 👈 use readOnly instead of enabled
-                        suffix: vm.showOtpField
-                            ? GestureDetector(
-                          onTap: vm.changeMobile,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            child: Text(
-                              "Change",
-                              style: TextStyle(
-                                color: AppColors.primary,
-                                fontWeight: FontWeight.normal,
-                                fontSize: 12.0,
-                              ),
-                            ),
-                          )
-
-                        )
-                            : null,
                       ),
 
+                      const SizedBox(height: 12),
 
-
-
-                      // 🔹 OTP FIELD (Animated)
-                      AnimatedSize(
-                        duration: const Duration(milliseconds: 300),
-                        curve: Curves.easeOut,
-                        child: vm.showOtpField
-                            ? Padding(
-                                padding: const EdgeInsets.only(top: 12),
-                                child: AppTextField(
-                                  focusNode: _otpFocusNode,
-                                  label: 'OTP',
-                                  keyboardType: TextInputType.number,
-                                  maxLength: 6,
-                                  onChanged: vm.setOtp,
-                                ),
-                              )
-                            : const SizedBox.shrink(),
+                      // 🔹 Password Field
+                      AppTextField(
+                        label: 'Password',
+                        obscureText: hidePassword,
+                        onChanged: vm.setPassword,
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            hidePassword
+                                ? Icons.visibility_off
+                                : Icons.visibility,
+                            color: AppColors.lightSubText,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              hidePassword = !hidePassword;
+                            });
+                          },
+                        ),
                       ),
 
                       const SizedBox(height: 24),
 
-                      // 🔹 Action Button (Smooth UX)
+                      // 🔹 Login Button
                       SizedBox(
                         width: double.infinity,
                         height: 48,
                         child: ElevatedButton(
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: theme.colorScheme.secondary,
+                            backgroundColor: theme.colorScheme.primary,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
                           ),
-                          onPressed: vm.isLoading
-                              ? null
-                              : vm.showOtpField
-                              ? vm.login
-                              : vm.sendOtp,
+                          onPressed: vm.isLoading ? null : vm.login,
                           child: AnimatedSwitcher(
                             duration: const Duration(milliseconds: 200),
                             child: vm.isLoading
@@ -256,10 +204,10 @@ class _LoginViewState extends State<LoginView> {
                                       color: Colors.white,
                                     ),
                                   )
-                                : Text(
-                                    vm.showOtpField ? 'Login' : 'Send OTP',
-                                    key: const ValueKey('text'),
-                                    style: const TextStyle(
+                                : const Text(
+                                    'Login',
+                                    key: ValueKey('text'),
+                                    style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),

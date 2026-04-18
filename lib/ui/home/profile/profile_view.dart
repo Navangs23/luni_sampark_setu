@@ -6,6 +6,7 @@ import 'package:luni_sampark_setu/ui/login/login_view.dart';
 import 'package:provider/provider.dart';
 import '../../../core/services/navigation_service.dart';
 import '../../../core/services/session_service.dart';
+import 'change_password_view.dart';
 import 'members/add_member_view.dart';
 import 'members/add_member_webview.dart';
 
@@ -20,6 +21,7 @@ class ProfileView extends StatelessWidget {
       _ProfileItem(Icons.family_restroom_rounded, "View Family"),
       _ProfileItem(Icons.search, 'Search'),
       _ProfileItem(Icons.business, 'Business Directory'),
+      _ProfileItem(Icons.lock_outlined, 'Change Password'),
       _ProfileItem(Icons.power_settings_new_rounded, 'Logout'),
     ];
 
@@ -55,12 +57,22 @@ class ProfileView extends StatelessWidget {
                   padding: const EdgeInsets.all(16),
                   child: Row(
                     children: [
-                      CircleAvatar(
-                        radius: 32,
-                        backgroundImage: const NetworkImage(
-                          'https://picsum.photos/500/500',
-                        ),
-                      ),
+                      context
+                              .watch<HomeShellViewModel>()
+                              .profilePicUrl
+                              .isNotEmpty
+                          ? CircleAvatar(
+                              radius: 32,
+                              backgroundImage: NetworkImage(
+                                context
+                                    .watch<HomeShellViewModel>()
+                                    .profilePicUrl,
+                              ),
+                            )
+                          : const CircleAvatar(
+                              radius: 32,
+                              child: Icon(Icons.person, size: 48),
+                            ),
                       const SizedBox(width: 16),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -130,12 +142,9 @@ class ProfileView extends StatelessWidget {
                       trailing: const Icon(Icons.chevron_right),
                       onTap: () async {
                         if (item.title == 'Logout') {
-                          Navigator.pop(context);
-                          final rootContext =
-                              NavigationService.navigatorKey.currentContext;
-                          if (rootContext != null) {
-                            rootContext.read<HomeShellViewModel>().reset();
-                          }
+                          final shellContext = context;
+                          Navigator.pop(context); // Close bottom sheet
+                          shellContext.read<HomeShellViewModel>().reset();
                           SessionService.logout();
                           SessionService.init();
                           NavigationService.pushReplacement(LoginView());
@@ -151,7 +160,7 @@ class ProfileView extends StatelessWidget {
                           NavigationService.push(
                             AddMemberWebView(
                               url:
-                                  "https://fairlorry.com/luni/appProfileSearch.php?",
+                                  "https://panjoluni.com/mobile-app/appProfileSearch.php?",
                               viewTitle: "Search Members",
                             ),
                           );
@@ -160,10 +169,13 @@ class ProfileView extends StatelessWidget {
                           NavigationService.push(
                             AddMemberWebView(
                               url:
-                                  "https://fairlorry.com/luni/appBusinessSearch.php?",
+                                  "https://panjoluni.com/mobile-app/appBusinessSearch.php?",
                               viewTitle: 'Business Directory',
                             ),
                           );
+                        } else if (item.title == 'Change Password') {
+                          NavigationService.pop();
+                          NavigationService.push(const ChangePasswordView());
                         }
                       },
                     );

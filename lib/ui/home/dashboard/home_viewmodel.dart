@@ -3,6 +3,12 @@ import 'package:luni_sampark_setu/core/services/navigation_service.dart';
 import 'package:luni_sampark_setu/core/services/session_service.dart';
 import 'package:luni_sampark_setu/ui/home/Community%20Sample/community_sample.dart';
 
+import '../advertisements/advertisements_view.dart';
+import '../downloads/downloads_view.dart';
+import '../gallery/gallery_view.dart';
+import '../live stream/livestream_view.dart';
+import '../directory/directory_view.dart';
+
 class HomeItem {
   final String title;
   final IconData icon;
@@ -20,17 +26,18 @@ class HomeViewModel extends ChangeNotifier {
       icon: Icons.groups_rounded,
       onTap: () {
         NavigationService.push(
-          const CommunitySample(pageTitle: "LUNI Committee"),
+          const CommunitySample(
+            pageTitle: "LUNI Committee",
+            url: "https://panjoluni.com/mobile-app/pgLuniCommunity.php",
+          ),
         );
       },
     ),
     HomeItem(
-      title: 'Past Presidents',
-      icon: Icons.history_edu_rounded,
+      title: 'Directory',
+      icon: Icons.contact_phone_rounded,
       onTap: () {
-        NavigationService.push(
-          const CommunitySample(pageTitle: "Past Presidents"),
-        );
+        NavigationService.push(const DirectoryView());
       },
     ),
     HomeItem(
@@ -38,7 +45,10 @@ class HomeViewModel extends ChangeNotifier {
       icon: Icons.volunteer_activism_rounded,
       onTap: () {
         NavigationService.push(
-          const CommunitySample(pageTitle: "Sadharmik Seva"),
+          const CommunitySample(
+            pageTitle: "Sadharmik Seva",
+            url: "https://panjoluni.com/mobile-app/pgSadharmikSeva.php",
+          ),
         );
       },
     ),
@@ -46,41 +56,45 @@ class HomeViewModel extends ChangeNotifier {
       title: 'About LUNI',
       icon: Icons.info_outline_rounded,
       onTap: () {
-        NavigationService.push(const CommunitySample(pageTitle: "About LUNI"));
+        NavigationService.push(
+          const CommunitySample(
+            pageTitle: "About LUNI",
+            url: "https://panjoluni.com/mobile-app/pgAboutLuni.php",
+          ),
+        );
       },
     ),
-    HomeItem(
+    /*HomeItem(
       title: 'About LUNI App',
       icon: Icons.app_settings_alt_rounded,
       onTap: () {
         NavigationService.push(
-          const CommunitySample(pageTitle: "About LUNI App"),
+          const CommunitySample(
+            pageTitle: "About LUNI App",
+            url: "https://flutter.dev",
+          ),
         );
       },
-    ),
+    ),*/
     HomeItem(
       title: 'Photo Gallery',
       icon: Icons.photo_library_rounded,
       onTap: () {
-        NavigationService.push(
-          const CommunitySample(pageTitle: "Photo Gallery"),
-        );
+        NavigationService.push(const GalleryView());
       },
     ),
     HomeItem(
       title: 'Advertisements',
       icon: Icons.campaign_rounded,
       onTap: () {
-        NavigationService.push(
-          const CommunitySample(pageTitle: "Advertisements"),
-        );
+        NavigationService.push(const AdvertisementsView());
       },
     ),
     HomeItem(
       title: 'Downloads',
       icon: Icons.download_rounded,
       onTap: () {
-        NavigationService.push(const CommunitySample(pageTitle: "Downloads"));
+        NavigationService.push(const DownloadsView());
       },
     ),
     HomeItem(
@@ -88,7 +102,11 @@ class HomeViewModel extends ChangeNotifier {
       icon: Icons.local_police_rounded,
       onTap: () {
         NavigationService.push(
-          const CommunitySample(pageTitle: "Govt. Important Numbers"),
+          const CommunitySample(
+            pageTitle: "Govt. Important Numbers",
+            url:
+                "https://panjoluni.com/mobile-app/pgImportantGovermentNumber.php",
+          ),
         );
       },
     ),
@@ -96,17 +114,21 @@ class HomeViewModel extends ChangeNotifier {
       title: 'Live Stream',
       icon: Icons.live_tv_rounded,
       onTap: () {
-        NavigationService.push(const CommunitySample(pageTitle: "Live Stream"));
+        NavigationService.push(const LiveStreamView());
       },
     ),
-    HomeItem(
+
+    /*HomeItem(
       title: 'Google Calendar Sync',
       icon: Icons.calendar_month_rounded,
       onTap: () {
         NavigationService.push(
-          const CommunitySample(pageTitle: "Google Calendar Sync"),
+          const CommunitySample(
+            pageTitle: "Google Calendar Sync",
+            url: "https://flutter.dev",
+          ),
         );
       },
-    ),
+    ),*/
   ];
 }

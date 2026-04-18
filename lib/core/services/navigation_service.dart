@@ -4,20 +4,28 @@ class NavigationService {
   static final GlobalKey<NavigatorState> navigatorKey =
       GlobalKey<NavigatorState>();
 
-  static void push(Widget page) {
-    navigatorKey.currentState?.push(_buildRoute(page));
+  static Future<T?> push<T>(Widget page) async {
+    return await navigatorKey.currentState?.push<T>(_buildRoute<T>(page));
   }
 
-  static void pushReplacement(Widget page) {
-    navigatorKey.currentState?.pushReplacement(_buildRoute(page));
+  static Future<T?> pushReplacement<T, TO>(Widget page) async {
+    return await navigatorKey.currentState
+        ?.pushReplacement<T, TO>(_buildRoute<T>(page));
+  }
+
+  static Future<void> pushAndRemoveUntil(Widget page) async {
+    await navigatorKey.currentState?.pushAndRemoveUntil(
+      _buildRoute(page),
+      (route) => false,
+    );
   }
 
   static void pop() {
     navigatorKey.currentState?.pop();
   }
 
-  static PageRoute _buildRoute(Widget page) {
-    return PageRouteBuilder(
+  static Route<T> _buildRoute<T>(Widget page) {
+    return PageRouteBuilder<T>(
       transitionDuration: const Duration(milliseconds: 250),
       reverseTransitionDuration: const Duration(milliseconds: 200),
       pageBuilder: (context, animation, secondaryAnimation) => page,

@@ -8,6 +8,7 @@ class SessionService {
   static const String _familyIdKey = "family_id";
   static const String _nameKey = "name";
   static const String _mobileNumberKey = "mobile";
+  static const String _profilePicKey = "profile_pic";
 
   /// 🔥 Call this once at app start
   static Future<void> init() async {
@@ -45,6 +46,14 @@ class SessionService {
 
   static String getMobileNumber() {
     return _prefs.getString(_mobileNumberKey) ?? "";
+  }
+
+  static String getProfilePic() {
+    return _prefs.getString(_profilePicKey) ?? "";
+  }
+
+  static void saveProfilePic(String url) {
+    _prefs.setString(_profilePicKey, url);
   }
 
   static void logout() {

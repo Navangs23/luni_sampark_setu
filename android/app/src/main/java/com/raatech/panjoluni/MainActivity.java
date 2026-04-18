@@ -1,4 +1,4 @@
-package com.raatechnocrates.panjoluni;
+package com.raatech.panjoluni;
 
 import android.os.Bundle;
 import android.webkit.WebView;

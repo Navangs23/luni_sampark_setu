@@ -3,6 +3,7 @@ import 'package:luni_sampark_setu/core/services/navigation_service.dart';
 import 'package:luni_sampark_setu/core/services/snackbar_service.dart';
 import 'package:luni_sampark_setu/ui/home/news/news_events_viewmodel.dart';
 import 'package:luni_sampark_setu/ui/home/shell/home_shell_viewmodel.dart';
+import 'package:luni_sampark_setu/ui/home/notifications/notifications_viewmodel.dart';
 import 'package:provider/provider.dart';
 
 import 'core/services/session_service.dart';
@@ -16,9 +17,12 @@ import 'ui/splash/splash_view.dart';
 // ViewModels
 import 'ui/splash/splash_viewmodel.dart';
 
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
   await SessionService.init();
+
   runApp(const MyApp());
 }
 
@@ -34,6 +38,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => HomeViewModel()),
         ChangeNotifierProvider(create: (_) => NewsEventsViewModel()),
         ChangeNotifierProvider(create: (_) => HomeShellViewModel()),
+        ChangeNotifierProvider(create: (_) => NotificationsViewModel()),
       ],
       child: MaterialApp(
         navigatorKey: NavigationService.navigatorKey,
