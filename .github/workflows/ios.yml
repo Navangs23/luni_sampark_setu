@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - main
+      - master
 
 jobs:
   ios-build:
@@ -27,12 +27,7 @@ jobs:
         run: flutter pub get
 
       - name: Run tests
-        run: |
-          if [ -d "test" ]; then
-            flutter test
-          else
-            echo "No test directory found - skipping Flutter tests"
-          fi
+        run: flutter test
 
       - name: Install CocoaPods dependencies
         working-directory: ios
