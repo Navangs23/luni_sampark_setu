@@ -140,11 +140,11 @@ class NotificationService {
       );
 
       // 6. Subscribe to "all" topic
-      try {
-        await _messaging.subscribeToTopic('all');
-      } catch (e) {
+      _messaging.subscribeToTopic('all').then((_) {
+        debugPrint('Successfully subscribed to topic: all');
+      }).catchError((e) {
         debugPrint('Failed to subscribe: $e');
-      }
+      });
 
       // 7. Listeners
       FirebaseMessaging.onMessage.listen((RemoteMessage message) {
