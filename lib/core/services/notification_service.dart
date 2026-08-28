@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'dart:io';
 import 'dart:convert';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -16,7 +17,22 @@ import 'package:provider/provider.dart';
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  await Firebase.initializeApp();
+  try {
+    if (Platform.isAndroid) {
+      await Firebase.initializeApp(
+        options: const FirebaseOptions(
+          apiKey: "AIzaSyDWp6rPFVWPu_OpdBtRcVy240YB06inhHk",
+          appId: "1:362541033092:android:33ae739a5adb7e0eb284d1",
+          messagingSenderId: "362541033092",
+          projectId: "luni-f37ce",
+        ),
+      );
+    } else {
+      await Firebase.initializeApp();
+    }
+  } catch (e) {
+    debugPrint("Background Firebase initialization failed: $e");
+  }
   debugPrint("Handling a background message: ${message.messageId}");
 }
 
@@ -38,14 +54,18 @@ class NotificationService {
 
   static Future<void> initFirebase() async {
     try {
-      await Firebase.initializeApp(
-        options: const FirebaseOptions(
-          apiKey: "AIzaSyDWp6rPFVWPu_OpdBtRcVy240YB06inhHk",
-          appId: "1:362541033092:android:33ae739a5adb7e0eb284d1",
-          messagingSenderId: "362541033092",
-          projectId: "luni-f37ce",
-        ),
-      );
+      if (Platform.isAndroid) {
+        await Firebase.initializeApp(
+          options: const FirebaseOptions(
+            apiKey: "AIzaSyDWp6rPFVWPu_OpdBtRcVy240YB06inhHk",
+            appId: "1:362541033092:android:33ae739a5adb7e0eb284d1",
+            messagingSenderId: "362541033092",
+            projectId: "luni-f37ce",
+          ),
+        );
+      } else if (Platform.isIOS) {
+        await Firebase.initializeApp();
+      }
       FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
     } catch (e) {
       debugPrint("Firebase initialization failed: $e");
