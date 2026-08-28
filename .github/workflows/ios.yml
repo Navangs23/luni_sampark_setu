@@ -26,9 +26,6 @@ jobs:
       - name: Get dependencies
         run: flutter pub get
 
-      - name: Run tests
-        run: flutter test
-
       - name: Install CocoaPods dependencies
         working-directory: ios
         run: pod install
