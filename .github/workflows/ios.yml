@@ -26,6 +26,27 @@ jobs:
       - name: Get dependencies
         run: flutter pub get
 
+      - name: Diagnose iOS configuration
+        run: |
+          echo "===== Flutter ====="
+          flutter --version
+
+          echo ""
+          echo "===== Xcode ====="
+          xcodebuild -version
+
+          echo ""
+          echo "===== Podfile ====="
+          cat ios/Podfile
+
+          echo ""
+          echo "===== Deployment targets ====="
+          grep -n "IPHONEOS_DEPLOYMENT_TARGET" ios/Runner.xcodeproj/project.pbxproj
+
+          echo ""
+          echo "===== Flutter Podspec ====="
+          find "$FLUTTER_ROOT" -name "Flutter.podspec" -print -exec grep -n "deployment_target" {} \;
+
       - name: Install CocoaPods dependencies
         working-directory: ios
         run: pod install
