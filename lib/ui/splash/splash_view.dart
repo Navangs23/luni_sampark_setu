@@ -64,12 +64,21 @@ class _SplashViewState extends State<SplashView>
 
   Future<void> _initApp() async {
     final startTime = DateTime.now();
+    debugPrint("[STARTUP 00] _initApp START at ${DateTime.now().toIso8601String()}");
 
     try {
+      debugPrint("[STARTUP 01] initFirebase START at ${DateTime.now().toIso8601String()}");
+      final f1 = DateTime.now();
       await NotificationService.initFirebase();
+      debugPrint("[STARTUP 01] initFirebase END - ${DateTime.now().difference(f1).inMilliseconds}ms");
+
+      debugPrint("[STARTUP 02] NotificationService.init START at ${DateTime.now().toIso8601String()}");
+      final f2 = DateTime.now();
       await NotificationService.init();
-    } catch (e) {
-      debugPrint("Initialization error: $e");
+      debugPrint("[STARTUP 02] NotificationService.init END - ${DateTime.now().difference(f2).inMilliseconds}ms");
+    } catch (e, stack) {
+      debugPrint("[STARTUP ERROR] Exception caught in SplashView._initApp(): $e");
+      debugPrint(stack.toString());
     }
 
     if (mounted) {
@@ -79,14 +88,23 @@ class _SplashViewState extends State<SplashView>
     }
 
     final elapsed = DateTime.now().difference(startTime).inMilliseconds;
+    debugPrint("[STARTUP 03] Session check. Elapsed: ${elapsed}ms");
     if (elapsed < 2500) {
+      debugPrint("[STARTUP 03] Enforcing minimum splash delay of ${2500 - elapsed}ms");
       await Future.delayed(Duration(milliseconds: 2500 - elapsed));
     }
 
-    if (!mounted) return;
+    if (!mounted) {
+      debugPrint("[STARTUP 03] SplashView not mounted after delay. Aborting navigation.");
+      return;
+    }
 
+    debugPrint("[STARTUP 03] SessionService.isLoggedIn START");
+    final f3 = DateTime.now();
     final isLoggedIn = await SessionService.isLoggedIn();
+    debugPrint("[STARTUP 03] SessionService.isLoggedIn END - ${DateTime.now().difference(f3).inMilliseconds}ms, isLoggedIn: $isLoggedIn");
 
+    debugPrint("[STARTUP 04] Navigation START");
     if (isLoggedIn) {
       Navigator.pushReplacement(
         context,

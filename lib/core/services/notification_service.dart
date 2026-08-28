@@ -17,6 +17,8 @@ import 'package:provider/provider.dart';
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  final startTime = DateTime.now();
+  debugPrint("[BACKGROUND START] _firebaseMessagingBackgroundHandler at ${startTime.toIso8601String()}");
   try {
     if (Platform.isAndroid) {
       await Firebase.initializeApp(
@@ -30,10 +32,11 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
     } else {
       await Firebase.initializeApp();
     }
-  } catch (e) {
-    debugPrint("Background Firebase initialization failed: $e");
+  } catch (e, stack) {
+    debugPrint("[BACKGROUND ERROR] Firebase initialization failed: $e");
+    debugPrint(stack.toString());
   }
-  debugPrint("Handling a background message: ${message.messageId}");
+  debugPrint("[BACKGROUND END] _firebaseMessagingBackgroundHandler - ${DateTime.now().difference(startTime).inMilliseconds}ms. Handling a background message: ${message.messageId}");
 }
 
 class NotificationService {
@@ -53,8 +56,11 @@ class NotificationService {
   );
 
   static Future<void> initFirebase() async {
+    final startTime = DateTime.now();
+    debugPrint("[START] NotificationService.initFirebase at ${startTime.toIso8601String()}");
     try {
       if (Platform.isAndroid) {
+        debugPrint("[START] Firebase.initializeApp with Android options");
         await Firebase.initializeApp(
           options: const FirebaseOptions(
             apiKey: "AIzaSyDWp6rPFVWPu_OpdBtRcVy240YB06inhHk",
@@ -63,23 +69,36 @@ class NotificationService {
             projectId: "luni-f37ce",
           ),
         );
+        debugPrint("[END] Firebase.initializeApp with Android options - ${DateTime.now().difference(startTime).inMilliseconds}ms");
       } else if (Platform.isIOS) {
+        debugPrint("[START] Firebase.initializeApp (iOS Default Options)");
+        final f = DateTime.now();
         await Firebase.initializeApp();
+        debugPrint("[END] Firebase.initializeApp (iOS Default Options) - ${DateTime.now().difference(f).inMilliseconds}ms");
       }
+      debugPrint("[START] FirebaseMessaging.onBackgroundMessage registration");
       FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
-    } catch (e) {
-      debugPrint("Firebase initialization failed: $e");
+      debugPrint("[END] FirebaseMessaging.onBackgroundMessage registration");
+    } catch (e, stack) {
+      debugPrint("[ERROR] Firebase initialization failed: $e");
+      debugPrint(stack.toString());
     }
+    debugPrint("[END] NotificationService.initFirebase total time - ${DateTime.now().difference(startTime).inMilliseconds}ms");
   }
 
   static Future<void> init() async {
+    final initStart = DateTime.now();
+    debugPrint("[START] NotificationService.init at ${initStart.toIso8601String()}");
     try {
       // 1. Request Permission
+      debugPrint("[START] FirebaseMessaging.requestPermission");
+      final fPermission = DateTime.now();
       NotificationSettings settings = await _messaging.requestPermission(
         alert: true,
         badge: true,
         sound: true,
       );
+      debugPrint("[END] FirebaseMessaging.requestPermission - ${DateTime.now().difference(fPermission).inMilliseconds}ms, Status: ${settings.authorizationStatus}");
 
       if (settings.authorizationStatus == AuthorizationStatus.authorized) {
         debugPrint('User granted Firebase messaging permission');
@@ -87,17 +106,23 @@ class NotificationService {
 
       // 2. Request Local Notification Permissions (Android 13+ & iOS)
       if (defaultTargetPlatform == TargetPlatform.android) {
+        debugPrint("[START] resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()?.requestNotificationsPermission()");
+        final fLNP = DateTime.now();
         await _localNotifications
             .resolvePlatformSpecificImplementation<
               AndroidFlutterLocalNotificationsPlugin
             >()
             ?.requestNotificationsPermission();
+        debugPrint("[END] resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()?.requestNotificationsPermission() - ${DateTime.now().difference(fLNP).inMilliseconds}ms");
       } else if (defaultTargetPlatform == TargetPlatform.iOS) {
+        debugPrint("[START] resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>()?.requestPermissions()");
+        final fLNP = DateTime.now();
         await _localNotifications
             .resolvePlatformSpecificImplementation<
               IOSFlutterLocalNotificationsPlugin
             >()
             ?.requestPermissions(alert: true, badge: true, sound: true);
+        debugPrint("[END] resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>()?.requestPermissions() - ${DateTime.now().difference(fLNP).inMilliseconds}ms");
       }
 
       // 3. Initialize Local Notifications
@@ -115,6 +140,8 @@ class NotificationService {
         iOS: initializationSettingsDarwin,
       );
 
+      debugPrint("[START] _localNotifications.initialize");
+      final fInitLN = DateTime.now();
       await _localNotifications.initialize(
         initializationSettings,
         onDidReceiveNotificationResponse: (NotificationResponse response) {
@@ -124,29 +151,42 @@ class NotificationService {
           }
         },
       );
+      debugPrint("[END] _localNotifications.initialize - ${DateTime.now().difference(fInitLN).inMilliseconds}ms");
 
       // 4. Create Android Notification Channel
-      await _localNotifications
-          .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin
-          >()
-          ?.createNotificationChannel(_channel);
+      if (defaultTargetPlatform == TargetPlatform.android) {
+        debugPrint("[START] resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()?.createNotificationChannel()");
+        final fANC = DateTime.now();
+        await _localNotifications
+            .resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin
+            >()
+            ?.createNotificationChannel(_channel);
+        debugPrint("[END] resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()?.createNotificationChannel() - ${DateTime.now().difference(fANC).inMilliseconds}ms");
+      }
 
       // 5. Enable Foreground Notifications Presentation (iOS mostly)
+      debugPrint("[START] FirebaseMessaging.setForegroundNotificationPresentationOptions");
+      final fFNP = DateTime.now();
       await _messaging.setForegroundNotificationPresentationOptions(
         alert: true,
         badge: true,
         sound: true,
       );
+      debugPrint("[END] FirebaseMessaging.setForegroundNotificationPresentationOptions - ${DateTime.now().difference(fFNP).inMilliseconds}ms");
 
       // 6. Subscribe to "all" topic
+      debugPrint("[START] FirebaseMessaging.subscribeToTopic('all') [ASYNC]");
+      final fSub = DateTime.now();
       _messaging.subscribeToTopic('all').then((_) {
-        debugPrint('Successfully subscribed to topic: all');
-      }).catchError((e) {
-        debugPrint('Failed to subscribe: $e');
+        debugPrint('[END] FirebaseMessaging.subscribeToTopic("all") SUCCESS - ${DateTime.now().difference(fSub).inMilliseconds}ms');
+      }).catchError((e, stack) {
+        debugPrint('[END] FirebaseMessaging.subscribeToTopic("all") FAILURE - ${DateTime.now().difference(fSub).inMilliseconds}ms. Error: $e');
+        debugPrint(stack.toString());
       });
 
       // 7. Listeners
+      debugPrint("[START] FirebaseMessaging listeners registration");
       FirebaseMessaging.onMessage.listen((RemoteMessage message) {
         debugPrint(
           "Foreground message received: ${message.notification?.title}",
@@ -183,16 +223,23 @@ class NotificationService {
       FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
         _handleMessageNavigation(message.data);
       });
+      debugPrint("[END] FirebaseMessaging listeners registration");
 
       // 8. Initial Message Check (FCM)
+      debugPrint("[START] FirebaseMessaging.getInitialMessage");
+      final fGIM = DateTime.now();
       RemoteMessage? initialMessage = await _messaging.getInitialMessage();
+      debugPrint("[END] FirebaseMessaging.getInitialMessage - ${DateTime.now().difference(fGIM).inMilliseconds}ms");
       if (initialMessage != null) {
         _handleMessageNavigation(initialMessage.data);
       }
 
       // 9. Initial Message Check (Local Notifications)
+      debugPrint("[START] _localNotifications.getNotificationAppLaunchDetails");
+      final fLAD = DateTime.now();
       final NotificationAppLaunchDetails? notificationAppLaunchDetails =
           await _localNotifications.getNotificationAppLaunchDetails();
+      debugPrint("[END] _localNotifications.getNotificationAppLaunchDetails - ${DateTime.now().difference(fLAD).inMilliseconds}ms");
       if (notificationAppLaunchDetails != null &&
           notificationAppLaunchDetails.didNotificationLaunchApp) {
         final payload =
@@ -203,9 +250,10 @@ class NotificationService {
         }
       }
     } catch (e, stack) {
-      debugPrint("NotificationService init error: $e");
+      debugPrint("[ERROR] NotificationService init error: $e");
       debugPrint(stack.toString());
     }
+    debugPrint("[END] NotificationService.init total time - ${DateTime.now().difference(initStart).inMilliseconds}ms");
   }
 
   static void _handleMessageNavigation(Map<String, dynamic> data) {
