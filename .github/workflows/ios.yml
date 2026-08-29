@@ -386,7 +386,31 @@ jobs:
           ls -lh "$ARCHIVE_PATH"
           
           echo "ARCHIVE_PATH=$ARCHIVE_PATH" >> "$GITHUB_ENV"
-      
+
+      - name: Verify archive build number
+        if: >
+          inputs.execute == 'yes' &&
+          (inputs.action == 'testflight' || inputs.action == 'appstore')
+        run: |
+          echo "Requested build number: ${{ inputs.build_number }}"
+
+          echo "Archive Info.plist:"
+          /usr/libexec/PlistBuddy \
+            -c "Print :ApplicationProperties:CFBundleShortVersionString" \
+            "$ARCHIVE_PATH/Info.plist"
+
+          /usr/libexec/PlistBuddy \
+            -c "Print :ApplicationProperties:CFBundleVersion" \
+            "$ARCHIVE_PATH/Info.plist"
+
+          echo "App Info.plist:"
+          /usr/libexec/PlistBuddy \
+            -c "Print :CFBundleShortVersionString" \
+            "$ARCHIVE_PATH/Products/Applications/Runner.app/Info.plist"
+
+          /usr/libexec/PlistBuddy \
+            -c "Print :CFBundleVersion" \
+            "$ARCHIVE_PATH/Products/Applications/Runner.app/Info.plist"
 
       # ==========================================================
       # 14. EXPORT SIGNED IPA
