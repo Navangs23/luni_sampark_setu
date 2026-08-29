@@ -274,6 +274,63 @@ jobs:
             -v \
             -p codesigning \
             "$KEYCHAIN_PATH"
+          
+          
+
+      # ==========================================================
+      # 12.5 CONFIGURE XCODE DISTRIBUTION SIGNING
+      # ==========================================================
+
+      - name: Configure Xcode distribution signing
+        if: >
+          inputs.execute == 'yes' &&
+          (inputs.action == 'testflight' || inputs.action == 'appstore')
+        run: |
+
+          echo "Configuring Xcode for manual distribution signing..."
+
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path("ios/Runner.xcodeproj/project.pbxproj")
+          text = path.read_text()
+
+          text = text.replace(
+              'CODE_SIGN_STYLE = Automatic;',
+              'CODE_SIGN_STYLE = Manual;'
+          )
+
+          text = text.replace(
+              '"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";',
+              '"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Apple Distribution";'
+          )
+
+          text = text.replace(
+              'CODE_SIGN_IDENTITY = "iPhone Developer";',
+              'CODE_SIGN_IDENTITY = "Apple Distribution";'
+          )
+
+          text = text.replace(
+              'CODE_SIGN_IDENTITY = "iOS Developer";',
+              'CODE_SIGN_IDENTITY = "Apple Distribution";'
+          )
+
+          path.write_text(text)
+          PY
+
+          echo "Setting provisioning profile..."
+          echo "Profile: $PROVISIONING_PROFILE_NAME"
+
+          xcodebuild \
+            -project ios/Runner.xcodeproj \
+            -target Runner \
+            -configuration Release \
+            -showBuildSettings \
+            CODE_SIGN_STYLE=Manual \
+            CODE_SIGN_IDENTITY="Apple Distribution" \
+            DEVELOPMENT_TEAM=DRTUV4MKYD \
+            PROVISIONING_PROFILE_SPECIFIER="$PROVISIONING_PROFILE_NAME" \
+            | grep -E "CODE_SIGN|DEVELOPMENT_TEAM|PROVISIONING_PROFILE"
 
       # ==========================================================
       # 13. BUILD SIGNED IPA
@@ -284,12 +341,13 @@ jobs:
           inputs.execute == 'yes' &&
           (inputs.action == 'testflight' || inputs.action == 'appstore')
         run: |
-          
+
           flutter build ipa \
             --release \
             --export-options-plist=ios/ExportOptions.plist \
             --build-number=${{ github.run_number }} \
-            --no-pub
+            --no-pub \
+            --verbose
 
       # ==========================================================
       # 14. VERIFY IPA
