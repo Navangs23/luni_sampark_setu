@@ -1,55 +1,203 @@
-name: iOS Build
+name: iOS Build & Release
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - master
+    inputs:
+      execute:
+        description: "Execute workflow?"
+        required: true
+        type: choice
+        options:
+          - "yes"
+          - "no"
+        default: "yes"
+
+      action:
+        description: "What should happen?"
+        required: true
+        type: choice
+        options:
+          - "build"
+          - "testflight"
+          - "appstore"
+        default: "build"
+
+      build_type:
+        description: "Build type"
+        required: true
+        type: choice
+        options:
+          - "debug"
+          - "release"
+        default: "release"
+
+      production_confirm:
+        description: "For App Store only: type PUBLISH"
+        required: false
+        type: string
+        default: ""
 
 jobs:
   ios-build:
+    name: iOS Build
     runs-on: macos-15
 
     steps:
+
+      # --------------------------------------------------
+      # 1. CHECK EXECUTION FLAG
+      # --------------------------------------------------
+      - name: Check execution flag
+        if: ${{ inputs.execute == 'no' }}
+        run: |
+          echo "Execution disabled."
+          echo "No build, signing, or upload will be performed."
+          exit 0
+
+      # --------------------------------------------------
+      # 2. CHECKOUT
+      # --------------------------------------------------
       - name: Checkout repository
+        if: ${{ inputs.execute == 'yes' }}
         uses: actions/checkout@v6
 
+      # --------------------------------------------------
+      # 3. SET UP FLUTTER
+      # --------------------------------------------------
       - name: Set up Flutter
+        if: ${{ inputs.execute == 'yes' }}
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.41.5'
+          flutter-version: "3.41.5"
           cache: true
 
       - name: Flutter version
+        if: ${{ inputs.execute == 'yes' }}
         run: flutter --version
 
-      - name: Get dependencies
+      # --------------------------------------------------
+      # 4. GET FLUTTER DEPENDENCIES
+      # --------------------------------------------------
+      - name: Flutter pub get
+        if: ${{ inputs.execute == 'yes' }}
         run: flutter pub get
 
-      - name: Diagnose iOS configuration
-        run: |
-          echo "===== Flutter ====="
-          flutter --version
-
-          echo ""
-          echo "===== Xcode ====="
-          xcodebuild -version
-
-          echo ""
-          echo "===== Podfile ====="
-          cat ios/Podfile
-
-          echo ""
-          echo "===== Deployment targets ====="
-          grep -n "IPHONEOS_DEPLOYMENT_TARGET" ios/Runner.xcodeproj/project.pbxproj
-
-          echo ""
-          echo "===== Flutter Podspec ====="
-          find "$FLUTTER_ROOT" -name "Flutter.podspec" -print -exec grep -n "deployment_target" {} \;
-
+      # --------------------------------------------------
+      # 5. INSTALL COCOAPODS
+      # --------------------------------------------------
       - name: Install CocoaPods dependencies
+        if: ${{ inputs.execute == 'yes' }}
         working-directory: ios
         run: pod install
 
-      - name: Build iOS
-        run: flutter build ios --release --no-codesign
+      # --------------------------------------------------
+      # 6. BUILD ONLY - DEBUG
+      # --------------------------------------------------
+      - name: Build iOS Debug
+        if: >
+          inputs.execute == 'yes' &&
+          inputs.action == 'build' &&
+          inputs.build_type == 'debug'
+        run: |
+          flutter build ios \
+            --debug \
+            --no-codesign
+
+      # --------------------------------------------------
+      # 7. BUILD ONLY - RELEASE
+      # --------------------------------------------------
+      - name: Build iOS Release
+        if: >
+          inputs.execute == 'yes' &&
+          inputs.action == 'build' &&
+          inputs.build_type == 'release'
+        run: |
+          flutter build ios \
+            --release \
+            --no-codesign
+
+      # --------------------------------------------------
+      # 8. CHECK APP STORE PRODUCTION CONFIRMATION
+      # --------------------------------------------------
+      - name: Check App Store confirmation
+        if: >
+          inputs.execute == 'yes' &&
+          inputs.action == 'appstore'
+        run: |
+          if [ "${{ inputs.build_type }}" != "release" ]; then
+            echo "ERROR: App Store builds must use Release."
+            exit 1
+          fi
+
+          if [ "${{ inputs.production_confirm }}" != "PUBLISH" ]; then
+            echo "ERROR: App Store publishing requires production_confirm = PUBLISH"
+            exit 1
+          fi
+
+          echo "Production publishing confirmed."
+
+      # --------------------------------------------------
+      # 9. TESTFLIGHT / APP STORE
+      #    BUILD SIGNED IPA
+      # --------------------------------------------------
+      #
+      # This section will be completed after we configure
+      # Apple signing certificates and provisioning.
+      #
+      - name: Build signed IPA
+        if: >
+          inputs.execute == 'yes' &&
+          (inputs.action == 'testflight' || inputs.action == 'appstore')
+        run: |
+          if [ "${{ inputs.build_type }}" != "release" ]; then
+            echo "ERROR: TestFlight/App Store builds must use Release."
+            exit 1
+          fi
+
+          flutter build ipa --release
+
+      # --------------------------------------------------
+      # 10. UPLOAD TO TESTFLIGHT
+      # --------------------------------------------------
+      - name: Upload to TestFlight
+        if: >
+          inputs.execute == 'yes' &&
+          inputs.action == 'testflight'
+        run: |
+          echo "TestFlight upload will be configured here."
+
+      # --------------------------------------------------
+      # 11. UPLOAD / PUBLISH TO APP STORE CONNECT
+      # --------------------------------------------------
+      - name: Upload to App Store
+        if: >
+          inputs.execute == 'yes' &&
+          inputs.action == 'appstore'
+        run: |
+          echo "App Store upload will be configured here."
+
+      # --------------------------------------------------
+      # 12. BUILD ARTIFACT FOR BUILD-ONLY MODE
+      # --------------------------------------------------
+      - name: Package build artifact
+        if: >
+          inputs.execute == 'yes' &&
+          inputs.action == 'build'
+        run: |
+          mkdir -p artifacts
+
+          if [ "${{ inputs.build_type }}" = "release" ]; then
+            cp -R build/ios/iphoneos/Runner.app artifacts/Runner.app
+          else
+            cp -R build/ios/iphoneos/Runner.app artifacts/Runner.app
+          fi
+
+      - name: Upload build artifact
+        if: >
+          inputs.execute == 'yes' &&
+          inputs.action == 'build'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-${{ inputs.build_type }}-build
+          path: artifacts/Runner.app
+          retention-days: 7
