@@ -63,6 +63,22 @@ jobs:
         uses: actions/checkout@v6
 
       # ==========================================================
+      # 2.5 SELECT XCODE
+      # ==========================================================
+
+      - name: Select Xcode 26.3
+        if: ${{ inputs.execute == 'yes' }}
+        run: |
+          sudo xcode-select -s /Applications/Xcode_26.3.app/Contents/Developer
+
+          echo "Selected Xcode:"
+          xcodebuild -version
+
+          echo "Available iOS SDK:"
+          xcodebuild -showsdks | grep -A 2 "iOS SDKs"
+
+
+      # ==========================================================
       # 3. FLUTTER
       # ==========================================================
 
