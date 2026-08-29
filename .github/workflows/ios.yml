@@ -62,20 +62,6 @@ jobs:
         if: ${{ inputs.execute == 'yes' }}
         uses: actions/checkout@v6
 
-
-      - name: Check installed Xcode versions
-        if: ${{ inputs.execute == 'yes' }}
-        run: |
-          echo "Installed Xcode versions:"
-          ls -d /Applications/Xcode*.app 2>/dev/null || true
-
-          echo ""
-          echo "Current Xcode:"
-          xcodebuild -version
-
-          echo ""
-          echo "Available iOS SDKs:"
-          xcodebuild -showsdks
       # ==========================================================
       # 3. FLUTTER
       # ==========================================================
