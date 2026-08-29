@@ -426,7 +426,7 @@ jobs:
           API_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
         run: |
 
-          PRIVATE_KEY_DIR="$RUNNER_TEMP/private_keys"
+          PRIVATE_KEY_DIR="$HOME/private_keys"
 
           mkdir -p "$PRIVATE_KEY_DIR"
 
@@ -437,6 +437,10 @@ jobs:
             "$PRIVATE_KEY_DIR/AuthKey_${API_KEY_ID}.p8"
 
           echo "API key prepared."
+
+          echo "Checking API key file exists..."
+
+          ls -l "$PRIVATE_KEY_DIR/AuthKey_${API_KEY_ID}.p8"
 
       # ==========================================================
       # 17. UPLOAD TO TESTFLIGHT
