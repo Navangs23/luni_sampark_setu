@@ -30,6 +30,11 @@ on:
           - "debug"
           - "release"
         default: "release"
+      build_number:
+        description: "iOS build number (must be higher than the previous App Store Connect build)"
+        required: true
+        type: string
+        default: "8"
 
       production_confirm:
         description: "For App Store only: type PUBLISH"
@@ -374,7 +379,7 @@ jobs:
             CODE_SIGN_IDENTITY="Apple Distribution" \
             DEVELOPMENT_TEAM=DRTUV4MKYD \
             PROVISIONING_PROFILE_SPECIFIER="$PROVISIONING_PROFILE_NAME" \
-            CURRENT_PROJECT_VERSION="${{ github.run_number }}"
+            CURRENT_PROJECT_VERSION="${{ inputs.build_number }}"
           
           echo "Archive created successfully."
           
