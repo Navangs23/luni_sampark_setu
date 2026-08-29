@@ -144,7 +144,7 @@ jobs:
 
           echo "Production publishing confirmed."
 
-            # ==========================================================
+      # ==========================================================
       # 9. CREATE TEMPORARY KEYCHAIN
       # ==========================================================
 
@@ -179,7 +179,7 @@ jobs:
 
           echo "KEYCHAIN_PATH=$KEYCHAIN_PATH" >> "$GITHUB_ENV"
 
-      # ==========================================================
+            # ==========================================================
       # 10. INSTALL DISTRIBUTION CERTIFICATE
       # ==========================================================
 
@@ -194,7 +194,8 @@ jobs:
 
           CERTIFICATE_PATH="$RUNNER_TEMP/apple_distribution.p12"
 
-          printf '%s' "$CERTIFICATE_BASE64" |
+          echo "$CERTIFICATE_BASE64" |
+            tr -d '\r\n ' |
             base64 --decode > "$CERTIFICATE_PATH"
 
           security import "$CERTIFICATE_PATH" \
