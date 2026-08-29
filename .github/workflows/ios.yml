@@ -379,7 +379,8 @@ jobs:
             CODE_SIGN_IDENTITY="Apple Distribution" \
             DEVELOPMENT_TEAM=DRTUV4MKYD \
             PROVISIONING_PROFILE_SPECIFIER="$PROVISIONING_PROFILE_NAME" \
-            CURRENT_PROJECT_VERSION="${{ inputs.build_number }}"
+            FLUTTER_BUILD_NUMBER="${{ inputs.build_number }}" \
+            FLUTTER_BUILD_NAME="4.0.0"
           
           echo "Archive created successfully."
           
